@@ -1,0 +1,12 @@
+# Ignore VS Code stuff
+**/.vscode/
+
+# Python pre-compiled things
+**/__pycache__/
+*.py[cod]
+*$py.class
+**/pythonenv*/
+**/.ipynb_checkpoints/
+
+# Ingore a Python .venv folder
+**/.venv/
