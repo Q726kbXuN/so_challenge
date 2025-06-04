@@ -19,3 +19,5 @@ possible clues.  It outputs `clues.json`, and caches data as `xwords_data_*.dat`
     * Consider using the clues themselves as a hint to the order they need to be solved in (perhaps alphabetical on the second character, for instance)
 
 * `fill_template.py` is the final step that takes the output of build_puzzle and creates `puzzle.html` with the web page.
+
+You can play the [final result online](https://q726kbxun.github.io/so_challenges/entry_002.html).
