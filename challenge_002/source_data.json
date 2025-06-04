@@ -1,0 +1,10 @@
+{
+    "puzzle": "",
+    "to_encodes": [
+        ["TREASURE", "Heap of Wealth"],
+        ["LOOKLEFT", "Reverse Iterator Move"],
+        ["SECRETED", "Private Variable Status"],
+        ["TOMORROW", "Next Iteration"]
+    ],
+    "seed_phrase": "Coding challenges involve creativity and fun, as they involve great chances to learn!"
+}
