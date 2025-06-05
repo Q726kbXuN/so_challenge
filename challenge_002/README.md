@@ -1,5 +1,7 @@
 # Code Challenge #2: Secret messages in game boards
 
+## Bracket Acrostic
+
 Solution to the [second Stack Overflow coding challenge](https://stackoverflow.com/beta/challenges/79651567/code-challenge-2-secret-messages-in-game-boards).  
 
 ![The Puzzle](img_before.png) -> ![The Puzzle](img_after.png)
@@ -22,3 +24,9 @@ possible clues.  It outputs `clues.json`, and caches data as `xwords_data_*.dat`
 * `fill_template.py` is the final step that takes the output of build_puzzle and creates `puzzle.html` with the web page.
 
 You can play the [final result online](https://q726kbxun.github.io/so_challenges/entry_002.html).
+
+## Sudoku
+
+![alt text](img_sudoku.png)
+
+Also, `sudoku.py` contains a encoder that creates a solvable Sudoku board with a string of 8 or less characters encoded in it, then solves the puzzle and decodes the value back out.
