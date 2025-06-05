@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 
-import random
-random.seed(42) # Not necessary, but makes runs consistent, so useful for debugging
+import random, sys
 
 # All the possible characters we can encode, we start with a null 
 # character to handle less than 8 characters
 CHARS = "\x00 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+# Optional, spend more time finding the hardest possible puzzle
+HARD_MODE = False
 
 def header(value):
     # Just dump out a header
-    print("-" * 5 + " " + value + " " + "-" * (60 - len(value)))
+    value = "-" * 5 + " " + value + " "
+    print(value + "-" * (60 - len(value)))
 
 def enum_xy(size, off_x=0, off_y=0):
     # Simple helper to only do the nested x/y enumeration one place
@@ -32,15 +34,21 @@ def show_grids(*grids):
 
     for grid in grids:
         cur_row = 0
-        for y in range(9):
-            if y > 0 and y % 3 == 0:
-                add_to_row("-" * 7 + "+" + "-" * 7 + "+" + "-" * 7)
-            row = " "
-            for x in range(9):
-                if x > 0 and x % 3 == 0:
-                    row += "| "
-                row += f"{grid[x + y * 9]} "
-            add_to_row(row)
+        if isinstance(grid, str):
+            temp = [' ' * len(grid)] * len(rows)
+            temp[len(temp) // 2] = grid
+            for cur in temp:
+                add_to_row(cur)
+        else:
+            for y in range(9):
+                if y > 0 and y % 3 == 0:
+                    add_to_row("-" * 7 + "+" + "-" * 7 + "+" + "-" * 7)
+                row = " "
+                for x in range(9):
+                    if x > 0 and x % 3 == 0:
+                        row += "| "
+                    row += f"{grid[x + y * 9]} "
+                add_to_row(row)
 
     for row in rows:
         print(row)
@@ -142,29 +150,99 @@ def decode_grid(grid):
     # short strings here
     return decoded.split("\x00")[0]
 
-def make_simple_puzzle(grid):
+def create_worker(worker_id, grid, lock, global_best, global_grid):
+    import time
+
+    # Make sure this worker works on a different set than other workers
+    random.seed(worker_id)
+
+    # Our local best hit
+    best, puzzle = 0, None
+
+    bail_at = time.time() + 30  # Just try things for 30 seconds
+    bail_hard = 40              # Or, till any worker finds one with 40 removed
+
+    while time.time() < bail_at and global_best.value < bail_hard:
+        test = make_single_puzzle(grid)
+        removed = sum(1 if cell == ' ' else 0 for cell in test)
+        if removed > best:
+            best, puzzle = removed, test
+            if best > global_best.value:
+                with lock:
+                    if best > global_best.value:
+                        global_best.value = best
+                        for i, val in enumerate(puzzle):
+                            global_grid[i] = 0 if val == ' ' else val
+
+def try_multiple_puzzles(grid):
+    # Run through the puzzle maker worker multiple times, 
+    # finding the hardest possible puzzle
+
+    best, puzzle = 0, None
+    if HARD_MODE:
+        # For hard mode, just try a whole bunch for a while on 
+        # all the cores we have available
+        from multiprocessing import cpu_count, Value, Array, Lock, Process
+        lock = Lock()
+        best_value = Value('i')
+        best_grid = Array('i', [0] * 81)
+        procs = [Process(target=create_worker, args=(i, grid, lock, best_value, best_grid)) for i in range(cpu_count())]
+        [x.start() for x in procs]
+        [x.join() for x in procs]
+        puzzle = [' ' if x == 0 else x for x in best_grid]
+    else:
+        for _ in range(100):
+            test = make_single_puzzle(grid)
+            removed = sum(1 if cell == ' ' else 0 for cell in test)
+            if removed > best:
+                best, puzzle = removed, test
+                # Limit of 30 here as a reasonable cut off point, and to 
+                # prevent from spinning too long looking for something
+                if best >= 30: break
+    
+    return puzzle
+    
+def make_single_puzzle(grid):
     # Remove some number of cells, ensuring that we never end up with
     # a situation where a cell on the diagonal that we need to worry about
     # has more than one solution
 
-    # The cells we'll try, we shuffle them so we try random cells
+    # Create a list of cells we can never have more than one solution to
+    specials = []
+    for off in range(0, 9, 3):
+        for x, y in enum_xy(3, off, off):
+            specials.append((x, y))
+
     grid = grid[:]
-    cells = list(range(81))
-    random.shuffle(cells)
+    bail = 5
+    bail_reset = bail
+    while bail > 0:
+        # Create a list of boxes and how many cells still have a clue
+        boxes = []
+        for box_x, box_y in enum_xy(3):
+            boxes.append([])
+            for x, y in enum_xy(3):
+                x, y = box_x * 3 + x, box_y * 3 + y
+                if isinstance(grid[x + y * 9], int):
+                    boxes[-1].append(x + y * 9)
+        
+        # Get all the boxes with the most number of answers in it
+        boxes.sort(key=lambda x: len(x))
+        boxes = [x for x in boxes if len(x) == len(boxes[-1])]
 
-    for cell in cells:
-        # Remove this cell
-        temp = grid[cell]
-        grid[cell] = " "
+        # Pull out the cell we'll try to use
+        cell = random.choice(random.choice(boxes))
+        was_value = grid[cell]
+        grid[cell] = ' '
 
-        for off in range(0, 9, 3):
-            if grid[cell] == temp: break
-            for x, y in enum_xy(3, off, off):
-                if len(valid_options(grid, x, y)) != 1:
-                    # Oops, we removed a cell that caused more 
-                    # than one possibility somewhere, add it back
-                    grid[cell] = temp
-                    break
+        # And now see if we messed up any of the special values
+        if all(len(valid_options(grid, x, y)) == 1 for x, y in specials):
+            # This is all good, reset our bail out
+            bail = bail_reset
+        else:
+            # Oops, this breaks one of the special cells, go ahead and revert it
+            grid[cell] = was_value
+            bail -= 1
 
     return grid
 
@@ -176,14 +254,14 @@ def create_and_decode(value):
     grid = add_solution(grid)
 
     # Remove cells till we have a puzzle
-    grid = make_simple_puzzle(grid)
+    grid = try_multiple_puzzles(grid)
     # Now we have a puzzle that can be solved, but 
     # doesn't directly have the decoded value
     # in it anymore, so solve it
     removed = sum(1 for x in grid if x == ' ')
     header(f"Grid with {removed} removed cells, and solved puzzle")
     solved_grid = add_solution(grid)
-    show_grids(grid, solved_grid)
+    show_grids(grid, "--->", solved_grid)
     header("Hidden string")
     decoded = decode_grid(solved_grid)
     print(decoded)
@@ -192,15 +270,24 @@ def create_and_decode(value):
     if decoded != value:
         raise Exception("We got the wrong value!")
 
-to_test = [
-    "TREASURE",
-    "LOOKLEFT",
-    "SECRETED",
-    "DIGHERE!",
-    "TOMORROW",
-    "SMALL",
-    "|-|311()",
-]
+def main():
+    random.seed(42) # Not necessary, but makes runs consistent, so useful for debugging
+    if len(sys.argv) > 1:
+        # Allow passing in a string from the command line
+        to_test = sys.argv[1:]
+    else:
+        to_test = [
+            "TREASURE",
+            "LOOKLEFT",
+            "SECRETED",
+            "DIGHERE!",
+            "TOMORROW",
+            "SMALL",
+            "|-|311()",
+        ]
 
-for value in to_test:
-    create_and_decode(value)
+    for value in to_test:
+        create_and_decode(value)
+
+if __name__ == "__main__":
+    main()
