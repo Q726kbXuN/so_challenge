@@ -270,11 +270,40 @@ def create_and_decode(value):
     if decoded != value:
         raise Exception("We got the wrong value!")
 
+def decode_input():
+    print("Enter a new line to end input")
+    import re
+
+    grid = []
+    while True:
+        temp = input()
+        m = re.search("([1-9 ]) ([1-9 ]) ([1-9 ]) \\| ([1-9 ]) ([1-9 ]) ([1-9 ]) \\| ([1-9 ]) ([1-9 ]) ([1-9 ])", temp)
+        if m is not None:
+            for val in m.groups():
+                if val == " ":
+                    grid.append(' ')
+                else:
+                    grid.append(int(val))
+        if len(temp) == 0:
+            break
+
+    if len(grid) == 81:
+        solved_grid = add_solution(grid)
+        decoded = decode_grid(solved_grid)
+        print(decoded)
+    else:
+        print("Malformed grid")
+
 def main():
     random.seed(42) # Not necessary, but makes runs consistent, so useful for debugging
     if len(sys.argv) > 1:
-        # Allow passing in a string from the command line
-        to_test = sys.argv[1:]
+        if sys.argv[1] == "decode":
+            # A simple way to decode a grid
+            decode_input()
+            exit(0)
+        else:
+            # Allow passing in a string from the command line
+            to_test = sys.argv[1:]
     else:
         to_test = [
             "TREASURE",
