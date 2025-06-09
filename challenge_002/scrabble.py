@@ -192,8 +192,6 @@ def find_place(digit, grid, draw_bag, place, word, first_letter, words, cipher):
                                                 return ret
             
 
-# -----------------------------------------------
-
 def decode_grid(grid, cipher):
     # Rather simple worker to run through, find all the words of the grid, get their cipher value, and
     # build up the return word
@@ -275,6 +273,30 @@ def encode(word):
     show_grid(grid)
     decoded = decode_grid(grid, get_common_middle_letters())
     print(f"That grid decodes to: {decoded}")
+
+    if os.path.isfile("scrabble_template.html"):
+        dump_webpage(place, decoded)
+
+def dump_webpage(place, decoded):
+    # If a template for the scrabble board exists locally, dump
+    # out the HTML of the board.
+    import json
+
+    data = []
+    for step in place:
+        x, y = step[0]['pos']
+        horiz = "horiz" if step[0]['horiz'] else "vertical"
+        word = ''.join(x['char'] for x in step)
+        data.append([word, x, y, horiz])
+    
+    with open("scrabble_template.html", "rt", encoding="utf-8") as f:
+        page = f.read()
+
+    page = page.replace("['NEEDED']", json.dumps(data))
+    page = page.replace("DECODED", decoded)
+
+    with open("scrabble_output.html", "wt", newline="", encoding="utf-8") as f:
+        f.write(page)
 
 def decode_input():
     print("Enter a grid to decode, enter a single '.' to end input:")

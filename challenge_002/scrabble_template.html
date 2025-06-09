@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scrabble Board</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: black;
+    padding: 20px;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    gap: 2px;
+    background-color: #222;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.solution {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    background-color: #222;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.cell {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 16px;
+    border-radius: 3px;
+    position: relative;
+    border: 1px solid #333;
+}
+
+.cell.letter {
+    background-color: #eee;
+    color: black;
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.cell.empty {
+    background-color: #1e7c7a;
+    color: #666;
+    font-size: 10px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.cell.triple-word {
+    background-color: #8f1319;
+    color: black;
+}
+
+.cell.double-word {
+    background-color: #a86860;
+    color: black;
+}
+
+.cell.triple-letter {
+    background-color: #0a838d;
+    color: black;
+}
+
+.cell.double-letter {
+    background-color: #a0655a;
+    color: black;
+}
+
+.cell.center {
+    background-color: #a0655a;
+    color: black;
+}
+
+.bonus-text {
+    font-size: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1;
+}
+</style>
+<script>
+const bonusSquares = {
+    "0,0": "TW", "0,3": "DL", "0,7": "TW", "0,11": "DL", "0,14": "TW", "1,1": "DW", "1,5": "TL", 
+    "1,9": "TL", "1,13": "DW", "2,2": "DW", "2,6": "DL", "2,8": "DL", "2,12": "DW", "3,0": "DL", 
+    "3,3": "DW", "3,7": "DL", "3,11": "DW", "3,14": "DL", "4,4": "DW", "4,10": "DW", "5,1": "TL", 
+    "5,5": "TL", "5,9": "TL", "5,13": "TL", "6,2": "DL", "6,6": "DL", "6,8": "DL", "6,12": "DL", 
+    "7,0": "TW", "7,3": "DL", "7,7": "DW", "7,11": "DL", "7,14": "TW", "8,2": "DL", "8,6": "DL", 
+    "8,8": "DL", "8,12": "DL", "9,1": "TL", "9,5": "TL", "9,9": "TL", "9,13": "TL", "10,4": "DW", 
+    "10,10": "DW", "11,0": "DL", "11,3": "DW", "11,7": "DL", "11,11": "DW", "11,14": "DL", 
+    "12,2": "DW", "12,6": "DL", "12,8": "DL", "12,12": "DW", "13,1": "DW", "13,5": "TL", 
+    "13,9": "TL", "13,13": "DW", "14,0": "TW", "14,3": "DL", "14,7": "TW", "14,11": "DL", 
+    "14,14": "TW", 
+};
+
+const words = ['NEEDED'];
+
+document.addEventListener('DOMContentLoaded', () => {
+    const board = document.getElementById('scrabbleBoard');
+    
+    const grid = Array(15).fill().map(() => Array(15).fill(''));
+    
+    words.forEach(([word, col, row, direction]) => {
+        for (let i = 0; i < word.length; i++) {
+            if (direction === 'horiz') {
+                if (col + i < 15) {
+                    grid[row][col + i] = word[i];
+                }
+            } else if (direction === 'vertical') {
+                if (row + i < 15) {
+                    grid[row + i][col] = word[i];
+                }
+            }
+        }
+    });
+
+    for (let row = 0; row < 15; row++) {
+        for (let col = 0; col < 15; col++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            
+            const letter = grid[row][col];
+            const bonusKey = `${row},${col}`;
+            const bonus = bonusSquares[bonusKey];
+            
+            if (letter) {
+                cell.classList.add('letter');
+                cell.textContent = letter;
+            } else {
+                cell.classList.add('empty');
+                
+                if (bonus === 'TW') {
+                    cell.classList.add('triple-word');
+                    cell.innerHTML = '<div class="bonus-text">Triple<br>Word<br>Score</div>';
+                } else if (bonus === 'DW') {
+                    cell.classList.add('double-word');
+                    cell.innerHTML = '<div class="bonus-text">Double<br>Word<br>Score</div>';
+                } else if (bonus === 'TL') {
+                    cell.classList.add('triple-letter');
+                    cell.innerHTML = '<div class="bonus-text">Triple<br>Letter<br>Score</div>';
+                } else if (bonus === 'DL') {
+                    cell.classList.add('double-letter');
+                    cell.innerHTML = '<div class="bonus-text">Double<br>Letter<br>Score</div>';
+                } else if (bonus === 'STAR') {
+                    cell.classList.add('center');
+                    cell.innerHTML = '<div class="bonus-text">★</div>';
+                }
+            }
+            
+            board.appendChild(cell);
+        }
+    }
+    
+    const solution = document.getElementById('solution');
+    const decodedWord = "DECODED";
+    for (const char of decodedWord) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.classList.add('letter');
+        cell.textContent = char;
+        solution.appendChild(cell);
+    }
+});
+</script>
+</head>
+<body>
+<div class="board" id="scrabbleBoard"></div>
+<div class="solution" id="solution"></div>
+</body>
+</html>

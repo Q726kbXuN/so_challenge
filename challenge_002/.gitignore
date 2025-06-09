@@ -2,3 +2,4 @@ xwords_data_*.dat
 clues.json
 puzzle.json
 collins-2019.jsonl.gz
+scrabble_output.html
