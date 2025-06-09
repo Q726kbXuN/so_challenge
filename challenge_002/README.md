@@ -27,10 +27,15 @@ You can play the [final result online](https://q726kbxun.github.io/so_challenges
 
 ## Sudoku
 
-![alt text](img_sudoku.png)
+![Sudoku](img_sudoku.png)
 
 `sudoku.py` contains an encoder that creates a solvable Sudoku puzzle embedding a string of up to 8 characters.  It then solves the puzzle and decodes the original string to verify correctness.
 
 One method for generating a Sudoku puzzle is to randomly fill three of the 3x3 boxes (which don't affect each other in the solving process) and then solve the rest of the board.  Each of these boxes has 9! possible permutations, so the total number of combinations across the three boxes is 9!<sup>3</sup> - approximately 4.7\*10<sup>16</sup>. If we want to encode an 8-character string using a character set of 100 printable characters, we need 100<sup>8</sup> (or 1.0\*10<sup>16</sup>) possible combinations. This gives us more than enough unique puzzles to encode any such string.
 
 This script follows that idea: it first converts the input string into a numerical value. That value is then used to select specific permutations for the diagonal boxes (from top-left to bottom-right). To be cute, the script removes some cells from the puzzle - while ensuring that the encoding boxes still have a unique solution - to create a valid Sudoku challenge. Finally, it solves the puzzle and decodes the message to confirm the process works end-to-end.
+
+## Scrabble
+![Scrabble](img_scrabble.png)
+
+`scrabble.py` is an encoder and decoder that can encode a message to a valid Scrabble game board.  It includes a simple replacement cipher so that the encoded message isn't obvious on the board.
