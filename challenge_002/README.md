@@ -39,3 +39,7 @@ This script follows that idea: it first converts the input string into a numeric
 ![Scrabble](img_scrabble.png)
 
 `scrabble.py` is an encoder and decoder that can encode a message to a valid Scrabble game board.  It includes a simple replacement cipher so that the encoded message isn't obvious on the board.
+
+This uses a simple cipher. For each letter in the target word, I convert it into an integer based on its position and value. That number is then used to index into a dictionary of common middle letters in words, generating a list of valid Scrabble words.
+
+From there, I follow standard Scrabble rules to find a playable word from the list for each letter in turn. Because the encoding preserves the position of each letter, decoding is straightforward: just extract the relevant letters from the words on the board and reconstruct the original word.
