@@ -4,7 +4,7 @@
 
 Solution to the [second Stack Overflow coding challenge](https://stackoverflow.com/beta/challenges/79651567/code-challenge-2-secret-messages-in-game-boards).  
 
-![The Puzzle](img_bracket.png)
+![Bracket Acrostic](img_bracket.png)
 
 The simple method of encoding a message is a homage to [Bracket City](https://www.theatlantic.com/games/bracket-city/) and [acrostic puzzles](https://en.wikipedia.org/wiki/Acrostic_%28puzzle%29).
 

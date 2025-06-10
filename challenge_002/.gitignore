@@ -1,5 +1,6 @@
-xwords_data_*.dat
 clues.json
-puzzle.json
 collins-2019.jsonl.gz
+puzzle.json
 scrabble_output.html
+sudoku_output.html
+xwords_data_*.dat

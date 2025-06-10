@@ -246,7 +246,17 @@ def make_single_puzzle(grid):
 
     return grid
 
-def create_and_decode(value):
+def write_html(grid):
+    import json
+    with open("sudoku_template.html", "rt", encoding="utf-8") as f:
+        page = f.read()
+    
+    page = page.replace("['NEEDED']", json.dumps(grid))
+
+    with open("sudoku_output.html", "wt", newline="", encoding="utf-8") as f:
+        f.write(page)
+
+def create_and_decode(value, create_html=False):
     # Start off making a encoded grid, this will 
     # only have 3 squares of 9 cells filled out
     grid = create_encoded_grid(value)
@@ -262,6 +272,8 @@ def create_and_decode(value):
     header(f"Grid with {removed} removed cells, and solved puzzle")
     solved_grid = add_solution(grid)
     show_grids(grid, "--->", solved_grid)
+    if create_html:
+        write_html(grid)
     header("Hidden string")
     decoded = decode_grid(solved_grid)
     print(decoded)
@@ -296,14 +308,23 @@ def decode_input():
 
 def main():
     random.seed(42) # Not necessary, but makes runs consistent, so useful for debugging
+    create_html = False
+
     if len(sys.argv) > 1:
-        if sys.argv[1] == "decode":
-            # A simple way to decode a grid
-            decode_input()
-            exit(0)
-        else:
-            # Allow passing in a string from the command line
-            to_test = sys.argv[1:]
+        to_test = []
+        for cur in sys.argv[1:]:
+            if cur == "HARD_MODE":
+                global HARD_MODE
+                HARD_MODE = True
+            elif cur == "SAVE_HTML":
+                create_html = True
+            elif cur == "decode":
+                # A simple way to decode a grid
+                decode_input()
+                exit(0)
+            else:
+                # Allow passing in a string from the command line
+                to_test.append(cur)
     else:
         to_test = [
             "TREASURE",
@@ -316,7 +337,7 @@ def main():
         ]
 
     for value in to_test:
-        create_and_decode(value)
+        create_and_decode(value, create_html=create_html)
 
 if __name__ == "__main__":
     main()
